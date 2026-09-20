@@ -44,4 +44,34 @@ xml_dir.mkdir(parents=True, exist_ok=True)
     encoding="utf-8",
 )
 
-print("Configured Android manifest for Fami OTA updates.")
+
+
+build_gradle_path = Path("android/app/build.gradle.kts")
+if not build_gradle_path.exists():
+    raise SystemExit("android/app/build.gradle.kts not found.")
+
+gradle = build_gradle_path.read_text(encoding="utf-8")
+
+if "isCoreLibraryDesugaringEnabled = true" not in gradle:
+    gradle = gradle.replace(
+        "compileOptions {\n",
+        "compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n",
+        1,
+    )
+
+if 'coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")' not in gradle:
+    dependencies_block = """
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+}
+
+"""
+    flutter_marker = 'flutter {\n'
+    if flutter_marker in gradle:
+        gradle = gradle.replace(flutter_marker, dependencies_block + flutter_marker, 1)
+    else:
+        gradle += "\n" + dependencies_block
+
+build_gradle_path.write_text(gradle, encoding="utf-8")
+
+print("Configured Android manifest and desugaring for Fami OTA updates.")
