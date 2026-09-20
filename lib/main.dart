@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'family_content.dart';
 import 'more_tools.dart';
 import 'theme_controller.dart';
+import 'update_service.dart';
 import 'wallet_tools.dart';
 
 void main() {
@@ -104,6 +106,16 @@ class FamiShell extends StatefulWidget {
 
 class _FamiShellState extends State<FamiShell> {
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        UpdateManager.maybePrompt(context);
+      }
+    });
+  }
 
   final _pages = const [
     HomeScreen(),
@@ -347,7 +359,13 @@ Future<void> showComposer(BuildContext context) async {
                       ),
                       onTap: () {
                         HapticFeedback.lightImpact();
+                        final label = actions[i].label;
                         Navigator.pop(context);
+                        Future<void>.delayed(Duration.zero, () {
+                          if (context.mounted) {
+                            openComposerAction(context, label);
+                          }
+                        });
                       },
                     ),
                     if (i != actions.length - 1)
@@ -367,6 +385,53 @@ class ComposerAction {
   const ComposerAction(this.icon, this.label);
   final IconData icon;
   final String label;
+}
+
+Future<void> openComposerAction(BuildContext context, String label) async {
+  Widget? destination;
+
+  switch (label) {
+    case 'Photo':
+      destination = const MemoriesScreen();
+      break;
+    case 'Event':
+      destination = const CreateItemScreen(type: 'Event');
+      break;
+    case 'Announcement':
+      destination = const CreateItemScreen(type: 'Announcement');
+      break;
+    case 'Poll':
+      destination = const CreateItemScreen(type: 'Poll');
+      break;
+    case 'Note':
+      destination = const CreateItemScreen(type: 'Note');
+      break;
+    case 'Expense':
+      destination = const CreateItemScreen(type: 'Expense');
+      break;
+    case 'Task':
+      destination = const CreateItemScreen(type: 'Task');
+      break;
+    case 'Voice message':
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voice recording is planned for the chat media pass.'),
+        ),
+      );
+      return;
+  }
+
+  if (destination == null) return;
+
+  final result = await Navigator.of(context).push<CreatedItem?>(
+    MaterialPageRoute(builder: (_) => destination!),
+  );
+
+  if (result != null && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${result.title} added to this prototype session.')),
+    );
+  }
 }
 
 class ScreenFrame extends StatelessWidget {
@@ -1515,15 +1580,57 @@ class MoreScreen extends StatelessWidget {
             const SizedBox(height: 18),
             Surface(
               padding: EdgeInsets.zero,
-              child: const Column(
+              child: Column(
                 children: [
-                  MoreRow(Icons.photo_library_outlined, 'Memories'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.calendar_month_outlined, 'Calendar'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.folder_outlined, 'Files'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.checklist_rounded, 'Lists'),
+                  MoreRow(
+                    Icons.campaign_outlined,
+                    'Announcements',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AnnouncementsScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.photo_library_outlined,
+                    'Memories',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const MemoriesScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.calendar_month_outlined,
+                    'Calendar',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const EventsScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.folder_outlined,
+                    'Files',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const FilesScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.checklist_rounded,
+                    'Lists',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ListsScreen(),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1560,6 +1667,16 @@ class MoreScreen extends StatelessWidget {
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const AppearanceScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.system_update_alt_rounded,
+                    'App Update',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const UpdateCenterScreen(),
                       ),
                     ),
                   ),
