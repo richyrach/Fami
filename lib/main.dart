@@ -585,62 +585,76 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 22),
           const FamilyStrip(),
           const SizedBox(height: 20),
-          Surface(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.campaign_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 13),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Family Announcement',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        "Dinner at Grandma's tonight",
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text('7:30 PM · Seen by 2/3'),
-                    ],
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AnnouncementsScreen(),
+              ),
+            ),
+            child: Surface(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.campaign_rounded,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                ),
-                Icon(Icons.chevron_right_rounded),
-              ],
+                  const SizedBox(width: 13),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Family Announcement',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          "Dinner at Grandma's tonight",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text('7:30 PM · Seen by 2/3'),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),
           const SectionTitle('Today', action: 'See All'),
           const SizedBox(height: 10),
-          Surface(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: const Column(
-              children: [
-                EventRow(
-                  time: '16:00',
-                  title: 'Dentist — Mom',
-                  subtitle: 'City Dental Clinic',
-                ),
-                Divider(height: 1, indent: 70),
-                EventRow(
-                  time: '19:30',
-                  title: "Grandma's house",
-                  subtitle: 'Everyone',
-                ),
-              ],
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const EventsScreen(),
+              ),
+            ),
+            child: Surface(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: const Column(
+                children: [
+                  EventRow(
+                    time: '16:00',
+                    title: 'Dentist — Mom',
+                    subtitle: 'City Dental Clinic',
+                  ),
+                  Divider(height: 1, indent: 70),
+                  EventRow(
+                    time: '19:30',
+                    title: "Grandma's house",
+                    subtitle: 'Everyone',
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
