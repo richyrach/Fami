@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart';\n\nimport 'wallet_tools.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1225,7 +1225,11 @@ class WalletScreen extends StatelessWidget {
                 child: SmallAction(
                   icon: Icons.currency_exchange_rounded,
                   label: 'Convert',
-                  onTap: () {},
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const CurrencyConverterScreen(),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1251,27 +1255,42 @@ class WalletScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Surface(
             padding: EdgeInsets.zero,
-            child: const Column(
+            child: Column(
               children: [
                 WalletNavRow(
                   icon: Icons.autorenew_rounded,
                   title: 'Subscriptions',
                   subtitle: r'4 active · $28.47 / month',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SubscriptionsScreen(),
+                    ),
+                  ),
                 ),
-                Divider(height: 1, indent: 56),
+                const Divider(height: 1, indent: 56),
                 WalletNavRow(
                   icon: Icons.language_rounded,
                   title: 'Domains',
                   subtitle: r'3 to keep · $55.20 / year',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DomainsScreen(),
+                    ),
+                  ),
                 ),
-                Divider(height: 1, indent: 56),
+                const Divider(height: 1, indent: 56),
                 WalletNavRow(
                   icon: Icons.show_chart_rounded,
                   title: 'Currency rates',
                   subtitle: 'USD / toman · TGJU',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ExchangeRateScreen(),
+                    ),
+                  ),
                 ),
-                Divider(height: 1, indent: 56),
-                WalletNavRow(
+                const Divider(height: 1, indent: 56),
+                const WalletNavRow(
                   icon: Icons.history_rounded,
                   title: 'Payment history',
                   subtitle: 'Manual records for now',
@@ -1397,16 +1416,19 @@ class WalletNavRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       minTileHeight: 62,
+      onTap: onTap,
       leading: Icon(icon),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(subtitle),
