@@ -315,6 +315,7 @@ class DockItem extends StatelessWidget {
 }
 
 Future<void> showComposer(BuildContext context) async {
+  final rootContext = context;
   final dark = Theme.of(context).brightness == Brightness.dark;
   await showModalBottomSheet<void>(
     context: context,
@@ -322,7 +323,7 @@ Future<void> showComposer(BuildContext context) async {
     showDragHandle: true,
     backgroundColor:
         dark ? const Color(0xFF1C1C1E) : const Color(0xFFF9F9FA),
-    builder: (context) {
+    builder: (sheetContext) {
       const actions = [
         ComposerAction(Icons.photo_rounded, 'Photo'),
         ComposerAction(Icons.mic_rounded, 'Voice message'),
@@ -360,10 +361,10 @@ Future<void> showComposer(BuildContext context) async {
                       onTap: () {
                         HapticFeedback.lightImpact();
                         final label = actions[i].label;
-                        Navigator.pop(context);
+                        Navigator.pop(sheetContext);
                         Future<void>.delayed(Duration.zero, () {
-                          if (context.mounted) {
-                            openComposerAction(context, label);
+                          if (rootContext.mounted) {
+                            openComposerAction(rootContext, label);
                           }
                         });
                       },
