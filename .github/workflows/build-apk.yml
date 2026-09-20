@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - "build/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android host project
+        run: flutter create --platforms=android --project-name fami --org com.fami.family .
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Analyze app
+        run: flutter analyze lib
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fami-Android
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
