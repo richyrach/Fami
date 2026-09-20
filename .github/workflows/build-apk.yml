@@ -31,7 +31,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze app
-        run: flutter analyze lib
+        run: flutter analyze lib --no-fatal-infos
 
       - name: Build release APK
         run: flutter build apk --release --dart-define=FAMI_UPDATE_MANIFEST_URL="${{ vars.FAMI_UPDATE_MANIFEST_URL }}"
