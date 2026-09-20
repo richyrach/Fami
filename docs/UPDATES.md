@@ -23,11 +23,11 @@ Example:
 
 ```json
 {
-  "build": 2,
-  "version": "0.2.0",
-  "apkUrl": "https://updates.example.com/Fami-0.2.0.apk",
+  "build": 3,
+  "version": "0.3.0",
+  "apkUrl": "https://updates.example.com/Fami-0.3.0.apk",
   "sha256": "PUT_REAL_SHA256_HERE",
-  "notes": "New family calendar, memories and update center.",
+  "notes": "The next Fami release.",
   "required": false
 }
 ```
