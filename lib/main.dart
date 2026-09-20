@@ -1,9 +1,11 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'family_content.dart';
+import 'fami_design.dart';
 import 'more_tools.dart';
 import 'theme_controller.dart';
 import 'update_service.dart';
@@ -17,78 +19,79 @@ void main() {
 class FamiApp extends StatelessWidget {
   const FamiApp({super.key});
 
+  ThemeData _theme(Brightness brightness) {
+    final dark = brightness == Brightness.dark;
+    final scheme = ColorScheme(
+      brightness: brightness,
+      primary: FamiPalette.accent,
+      onPrimary: Colors.white,
+      secondary: FamiPalette.accent,
+      onSecondary: Colors.white,
+      error: FamiPalette.red,
+      onError: Colors.white,
+      surface: dark ? FamiPalette.darkSurface : FamiPalette.lightSurface,
+      onSurface: dark ? Colors.white : const Color(0xFF111113),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: scheme,
+      scaffoldBackgroundColor:
+          dark ? FamiPalette.darkBackground : FamiPalette.lightBackground,
+      canvasColor:
+          dark ? FamiPalette.darkBackground : FamiPalette.lightBackground,
+      dividerColor:
+          dark ? FamiPalette.darkSeparator : FamiPalette.lightSeparator,
+      splashFactory: NoSplash.splashFactory,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      appBarTheme: AppBarTheme(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: dark ? Colors.white : const Color(0xFF111113),
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: dark ? Colors.white : const Color(0xFF111113),
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
+      ),
+      textTheme: TextTheme(
+        bodyLarge: const TextStyle(fontSize: 17, height: 1.28),
+        bodyMedium: const TextStyle(fontSize: 15, height: 1.28),
+        bodySmall: TextStyle(
+          fontSize: 13,
+          color: dark
+              ? FamiPalette.darkSecondary
+              : FamiPalette.lightSecondary,
+        ),
+        titleLarge: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+        ),
+        titleMedium: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.15,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    const lightScheme = ColorScheme(
-      brightness: Brightness.light,
-      primary: Color(0xFF007AFF),
-      onPrimary: Colors.white,
-      secondary: Color(0xFF5856D6),
-      onSecondary: Colors.white,
-      error: Color(0xFFFF3B30),
-      onError: Colors.white,
-      surface: Colors.white,
-      onSurface: Color(0xFF111113),
-    );
-
-    const darkScheme = ColorScheme(
-      brightness: Brightness.dark,
-      primary: Color(0xFF0A84FF),
-      onPrimary: Colors.white,
-      secondary: Color(0xFF5E5CE6),
-      onSecondary: Colors.white,
-      error: Color(0xFFFF453A),
-      onError: Colors.white,
-      surface: Color(0xFF1C1C1E),
-      onSurface: Colors.white,
-    );
-
-    ThemeData buildTheme(ColorScheme scheme) {
-      final isDark = scheme.brightness == Brightness.dark;
-      return ThemeData(
-        useMaterial3: true,
-        colorScheme: scheme,
-        scaffoldBackgroundColor:
-            isDark ? const Color(0xFF000000) : const Color(0xFFF7F7F8),
-        splashFactory: NoSplash.splashFactory,
-        highlightColor: Colors.transparent,
-        dividerColor:
-            isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E5EA),
-        textTheme: const TextTheme(
-          displaySmall: TextStyle(
-            fontSize: 34,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -1.1,
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.7,
-          ),
-          titleLarge: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
-          titleMedium: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-          bodyLarge: TextStyle(fontSize: 17),
-          bodyMedium: TextStyle(fontSize: 15),
-          bodySmall: TextStyle(fontSize: 13),
-        ),
-      );
-    }
-
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: famiThemeMode,
       builder: (context, mode, _) {
         return MaterialApp(
           title: 'Fami',
           debugShowCheckedModeBanner: false,
-          theme: buildTheme(lightScheme),
-          darkTheme: buildTheme(darkScheme),
+          theme: _theme(Brightness.light),
+          darkTheme: _theme(Brightness.dark),
           themeMode: mode,
           home: const FamiShell(),
         );
@@ -107,22 +110,20 @@ class FamiShell extends StatefulWidget {
 class _FamiShellState extends State<FamiShell> {
   int _index = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        UpdateManager.maybePrompt(context);
-      }
-    });
-  }
-
-  final _pages = const [
+  final List<Widget> _pages = const [
     HomeScreen(),
     ChatScreen(),
     FamilyScreen(),
     WalletScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) UpdateManager.maybePrompt(context);
+    });
+  }
 
   void _select(int index) {
     HapticFeedback.selectionClick();
@@ -134,15 +135,23 @@ class _FamiShellState extends State<FamiShell> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(index: _index, children: _pages),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: KeyedSubtree(
+              key: ValueKey(_index),
+              child: _pages[_index],
+            ),
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: SafeArea(
               minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-              child: FamiDock(
-                selectedIndex: _index,
+              child: _BottomDock(
+                selected: _index,
                 onSelect: _select,
-                onCompose: () => showComposer(context),
+                onPlus: () => showFamiComposer(context),
               ),
             ),
           ),
@@ -152,381 +161,149 @@ class _FamiShellState extends State<FamiShell> {
   }
 }
 
-class FamiDock extends StatelessWidget {
-  const FamiDock({
-    super.key,
-    required this.selectedIndex,
+class _BottomDock extends StatelessWidget {
+  const _BottomDock({
+    required this.selected,
     required this.onSelect,
-    required this.onCompose,
+    required this.onPlus,
   });
 
-  final int selectedIndex;
+  final int selected;
   final ValueChanged<int> onSelect;
-  final VoidCallback onCompose;
+  final VoidCallback onPlus;
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final accent = Theme.of(context).colorScheme.primary;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color: dark
-                ? const Color(0xE618181A)
-                : const Color(0xE6FFFFFF),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: dark
-                  ? const Color(0xFF333336)
-                  : const Color(0xFFE9E9EC),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dark ? 0.32 : 0.10),
-                blurRadius: 28,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              DockItem(
-                icon: Icons.home_rounded,
+    return FamiGlass(
+      radius: 28,
+      child: SizedBox(
+        height: 66,
+        child: Row(
+          children: [
+            Expanded(
+              child: _DockButton(
+                icon: CupertinoIcons.house,
+                activeIcon: CupertinoIcons.house_fill,
                 label: 'Home',
-                active: selectedIndex == 0,
+                active: selected == 0,
                 onTap: () => onSelect(0),
               ),
-              DockItem(
-                icon: Icons.chat_bubble_rounded,
+            ),
+            Expanded(
+              child: _DockButton(
+                icon: CupertinoIcons.chat_bubble_2,
+                activeIcon: CupertinoIcons.chat_bubble_2_fill,
                 label: 'Chat',
-                active: selectedIndex == 1,
+                active: selected == 1,
                 onTap: () => onSelect(1),
               ),
-              Semantics(
-                button: true,
-                label: 'Create new',
+            ),
+            SizedBox(
+              width: 66,
+              child: Center(
                 child: GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    onCompose();
+                    onPlus();
                   },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                    width: 52,
-                    height: 52,
+                  child: Container(
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: dark
+                      color: famiDark(context)
                           ? const Color(0xFF2C2C2E)
-                          : const Color(0xFFF1F1F3),
-                      border: Border.all(
-                        color: dark
-                            ? const Color(0xFF48484A)
-                            : const Color(0xFFD8D8DC),
-                      ),
+                          : Colors.white,
+                      border: Border.all(color: famiSeparator(context)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.10),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
-                    child: Icon(Icons.add_rounded, color: accent, size: 30),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      CupertinoIcons.add,
+                      color: FamiPalette.accent,
+                      size: 25,
+                    ),
                   ),
                 ),
               ),
-              DockItem(
-                icon: Icons.group_rounded,
+            ),
+            Expanded(
+              child: _DockButton(
+                icon: CupertinoIcons.person_2,
+                activeIcon: CupertinoIcons.person_2_fill,
                 label: 'Family',
-                active: selectedIndex == 2,
+                active: selected == 2,
                 onTap: () => onSelect(2),
               ),
-              DockItem(
-                icon: Icons.account_balance_wallet_rounded,
+            ),
+            Expanded(
+              child: _DockButton(
+                icon: CupertinoIcons.creditcard,
+                activeIcon: CupertinoIcons.creditcard_fill,
                 label: 'Wallet',
-                active: selectedIndex == 3,
+                active: selected == 3,
                 onTap: () => onSelect(3),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class DockItem extends StatelessWidget {
-  const DockItem({
-    super.key,
+class _DockButton extends StatelessWidget {
+  const _DockButton({
     required this.icon,
+    required this.activeIcon,
     required this.label,
     required this.active,
     required this.onTap,
   });
 
   final IconData icon;
+  final IconData activeIcon;
   final String label;
   final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
-    final muted = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF8E8E93)
-        : const Color(0xFF6E6E73);
-
-    return InkWell(
+    final inactive = famiSecondary(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: SizedBox(
-        width: 52,
-        height: 58,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedScale(
-              duration: const Duration(milliseconds: 180),
-              scale: active ? 1.08 : 1,
-              child: Icon(icon, size: 23, color: active ? accent : muted),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedScale(
+            duration: const Duration(milliseconds: 170),
+            curve: Curves.easeOutBack,
+            scale: active ? 1.05 : 1,
+            child: Icon(
+              active ? activeIcon : icon,
+              size: 22,
+              color: active ? FamiPalette.accent : inactive,
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                color: active ? accent : muted,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Future<void> showComposer(BuildContext context) async {
-  final rootContext = context;
-  final dark = Theme.of(context).brightness == Brightness.dark;
-  await showModalBottomSheet<void>(
-    context: context,
-    useSafeArea: true,
-    showDragHandle: true,
-    backgroundColor:
-        dark ? const Color(0xFF1C1C1E) : const Color(0xFFF9F9FA),
-    builder: (sheetContext) {
-      const actions = [
-        ComposerAction(Icons.photo_rounded, 'Photo'),
-        ComposerAction(Icons.mic_rounded, 'Voice message'),
-        ComposerAction(Icons.poll_rounded, 'Poll'),
-        ComposerAction(Icons.calendar_month_rounded, 'Event'),
-        ComposerAction(Icons.campaign_rounded, 'Announcement'),
-        ComposerAction(Icons.note_alt_rounded, 'Note'),
-        ComposerAction(Icons.attach_money_rounded, 'Expense'),
-        ComposerAction(Icons.check_circle_outline_rounded, 'Task'),
-      ];
-
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Create New',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            Surface(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  for (int i = 0; i < actions.length; i++) ...[
-                    ListTile(
-                      minTileHeight: 52,
-                      leading: Icon(actions[i].icon, size: 22),
-                      title: Text(actions[i].label),
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                      ),
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        final label = actions[i].label;
-                        Navigator.pop(sheetContext);
-                        Future<void>.delayed(Duration.zero, () {
-                          if (rootContext.mounted) {
-                            openComposerAction(rootContext, label);
-                          }
-                        });
-                      },
-                    ),
-                    if (i != actions.length - 1)
-                      const Divider(height: 1, indent: 54),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-class ComposerAction {
-  const ComposerAction(this.icon, this.label);
-  final IconData icon;
-  final String label;
-}
-
-Future<void> openComposerAction(BuildContext context, String label) async {
-  Widget? destination;
-
-  switch (label) {
-    case 'Photo':
-      destination = const MemoriesScreen();
-      break;
-    case 'Event':
-      destination = const CreateItemScreen(type: 'Event');
-      break;
-    case 'Announcement':
-      destination = const CreateItemScreen(type: 'Announcement');
-      break;
-    case 'Poll':
-      destination = const CreateItemScreen(type: 'Poll');
-      break;
-    case 'Note':
-      destination = const CreateItemScreen(type: 'Note');
-      break;
-    case 'Expense':
-      destination = const CreateItemScreen(type: 'Expense');
-      break;
-    case 'Task':
-      destination = const CreateItemScreen(type: 'Task');
-      break;
-    case 'Voice message':
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Voice recording is planned for the chat media pass.'),
-        ),
-      );
-      return;
-  }
-
-  if (destination == null) return;
-
-  final result = await Navigator.of(context).push<CreatedItem?>(
-    MaterialPageRoute(builder: (_) => destination!),
-  );
-
-  if (result != null && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${result.title} added to this prototype session.')),
-    );
-  }
-}
-
-class ScreenFrame extends StatelessWidget {
-  const ScreenFrame({
-    super.key,
-    required this.child,
-    this.horizontalPadding = 18,
-  });
-
-  final Widget child;
-  final double horizontalPadding;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(horizontalPadding, 10, horizontalPadding, 96),
-        child: child,
-      ),
-    );
-  }
-}
-
-class Surface extends StatelessWidget {
-  const Surface({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(16),
-    this.radius = 22,
-  });
-
-  final Widget child;
-  final EdgeInsets padding;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: dark ? const Color(0xFF1C1C1E) : Colors.white,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
-          color: dark ? const Color(0xFF2C2C2E) : const Color(0xFFE8E8EB),
-        ),
-        boxShadow: dark
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 16,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, {super.key, this.action});
-
-  final String title;
-  final String? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final secondary = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF98989D)
-        : const Color(0xFF6E6E73);
-
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge,
           ),
-        ),
-        if (action != null)
+          const SizedBox(height: 3),
           Text(
-            action!,
+            label,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+              color: active ? FamiPalette.accent : inactive,
+              fontSize: 9.5,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+              letterSpacing: -0.1,
             ),
-          )
-        else
-          Text('', style: TextStyle(color: secondary)),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -536,68 +313,38 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF98989D)
-        : const Color(0xFF6E6E73);
-
-    return ScreenFrame(
+    return FamiPage(
       child: ListView(
+        physics: const BouncingScrollPhysics(),
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Good afternoon,', style: TextStyle(color: secondary)),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Mahdiar',
-                      style: Theme.of(context).textTheme.displaySmall,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Saturday, 20 September',
-                      style: TextStyle(color: secondary, fontSize: 14),
-                    ),
-                  ],
-                ),
+          FamiHeader(
+            eyebrow: 'Saturday, 20 September',
+            title: 'Good afternoon, Mahdiar',
+            trailing: _RoundAction(
+              icon: CupertinoIcons.person_crop_circle,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const MoreScreen()),
               ),
-              IconButton(
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const MoreScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.person_outline_rounded),
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF1C1C1E)
-                      : Colors.white,
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 22),
-          const FamilyStrip(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
+          const _PeopleStrip(),
+          const SizedBox(height: 26),
           GestureDetector(
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const AnnouncementsScreen(),
               ),
             ),
-            child: Surface(
+            child: FamiGroup(
+              padding: const EdgeInsets.fromLTRB(16, 15, 14, 15),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.campaign_rounded,
-                    color: Theme.of(context).colorScheme.primary,
+                  const Icon(
+                    CupertinoIcons.speaker_2,
+                    color: FamiPalette.accent,
+                    size: 20,
                   ),
                   const SizedBox(width: 13),
                   const Expanded(
@@ -605,83 +352,95 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Family Announcement',
+                          'Dinner at Grandma’s tonight',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 16.5,
                             fontWeight: FontWeight.w600,
+                            letterSpacing: -0.15,
                           ),
                         ),
-                        SizedBox(height: 6),
+                        SizedBox(height: 4),
                         Text(
-                          "Dinner at Grandma's tonight",
+                          '7:30 PM · Family announcement',
                           style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5,
+                            color: FamiPalette.lightSecondary,
                           ),
                         ),
-                        SizedBox(height: 2),
-                        Text('7:30 PM · Seen by 2/3'),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const SectionTitle('Today', action: 'See All'),
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const EventsScreen(),
-              ),
-            ),
-            child: Surface(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: const Column(
-                children: [
-                  EventRow(
-                    time: '16:00',
-                    title: 'Dentist — Mom',
-                    subtitle: 'City Dental Clinic',
-                  ),
-                  Divider(height: 1, indent: 70),
-                  EventRow(
-                    time: '19:30',
-                    title: "Grandma's house",
-                    subtitle: 'Everyone',
+                  Icon(
+                    CupertinoIcons.chevron_forward,
+                    size: 15,
+                    color: famiSecondary(context),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          const MiniBankCard(),
-          const SizedBox(height: 22),
-          const SectionTitle('Upcoming'),
-          const SizedBox(height: 10),
-          Surface(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: const Column(
+          const SizedBox(height: 26),
+          FamiSectionHeader(
+            title: 'Today',
+            action: 'See all',
+            onAction: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const EventsScreen()),
+            ),
+          ),
+          FamiGroup(
+            child: Column(
               children: [
-                FinanceRow(
+                _AgendaRow(
+                  time: '16:00',
+                  title: 'Dentist',
+                  subtitle: 'Mom · City Dental Clinic',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const EventsScreen(),
+                    ),
+                  ),
+                ),
+                const FamiDivider(indent: 78),
+                _AgendaRow(
+                  time: '19:30',
+                  title: 'Grandma’s house',
+                  subtitle: 'Everyone',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const EventsScreen(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 26),
+          const FamiSectionHeader(title: 'Wallet'),
+          GestureDetector(
+            onTap: () {},
+            child: const FamiBankCard(compact: true),
+          ),
+          const SizedBox(height: 26),
+          const FamiSectionHeader(title: 'Coming up'),
+          FamiGroup(
+            child: Column(
+              children: const [
+                _PaymentRow(
                   title: 'Google One',
-                  subtitle: 'Sep 23',
-                  trailing: r'$1.99',
+                  detail: 'Sep 23',
+                  amount: '\$1.99',
                 ),
-                Divider(height: 1, indent: 52),
-                FinanceRow(
+                FamiDivider(),
+                _PaymentRow(
                   title: 'Spotify Premium',
-                  subtitle: 'Sep 29',
-                  trailing: r'$5.49',
+                  detail: 'Sep 29',
+                  amount: '\$5.49',
                 ),
-                Divider(height: 1, indent: 52),
-                FinanceRow(
+                FamiDivider(),
+                _PaymentRow(
                   title: 'ChatGPT',
-                  subtitle: 'Oct 12',
-                  trailing: r'$20.00',
+                  detail: 'Oct 12',
+                  amount: '\$20.00',
                 ),
               ],
             ),
@@ -692,12 +451,12 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class FamilyStrip extends StatelessWidget {
-  const FamilyStrip({super.key});
+class _PeopleStrip extends StatelessWidget {
+  const _PeopleStrip();
 
   @override
   Widget build(BuildContext context) {
-    const people = [
+    final people = const [
       ('M', 'You', 'Home'),
       ('M', 'Mom', 'Home'),
       ('M', 'Dad', 'Work'),
@@ -705,193 +464,159 @@ class FamilyStrip extends StatelessWidget {
     ];
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: people
-          .map(
-            (person) => SizedBox(
-              width: 72,
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF2C2C2E)
-                            : const Color(0xFFE9E9EC),
-                    child: Text(
-                      person.$1,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                    ),
+      children: [
+        for (int i = 0; i < people.length; i++) ...[
+          Expanded(
+            child: Column(
+              children: [
+                FamiAvatar(
+                  initial: people[i].$1,
+                  size: 50,
+                  online: i < 3,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  people[i].$2,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 7),
-                  Text(
-                    person.$2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  people[i].$3,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: famiSecondary(context),
+                    fontSize: 10.5,
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    person.$3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF98989D)
-                          : const Color(0xFF6E6E73),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          )
-          .toList(),
+          ),
+        ],
+      ],
     );
   }
 }
 
-class EventRow extends StatelessWidget {
-  const EventRow({
-    super.key,
+class _AgendaRow extends StatelessWidget {
+  const _AgendaRow({
     required this.time,
     required this.title,
     required this.subtitle,
+    required this.onTap,
   });
 
   final String time;
   final String title;
   final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 62,
-      leading: SizedBox(
-        width: 42,
-        child: Text(
-          time,
-          style: TextStyle(
-            fontSize: 14,
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right_rounded),
-    );
-  }
-}
-
-class MiniBankCard extends StatelessWidget {
-  const MiniBankCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      constraints: const BoxConstraints(minHeight: 174),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0B2A4A), Color(0xFF174D74), Color(0xFF7A6B58)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Bank Muscat',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(15, 13, 13, 13),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 52,
+              child: Text(
+                time,
+                style: const TextStyle(
+                  color: FamiPalette.accent,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              Spacer(),
-              Text(
-                'VISA',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ],
-          ),
-          Spacer(),
-          Text(
-            '1.865 OMR',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.6,
             ),
-          ),
-          SizedBox(height: 6),
-          Text(
-            r'≈ $4.85  ·  ≈ 1.12M toman',
-            style: TextStyle(color: Colors.white70, fontSize: 15),
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                '•••• 4275',
-                style: TextStyle(color: Colors.white70),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: famiSecondary(context),
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
               ),
-              Spacer(),
-              Text(
-                'Manual balance',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
-          ),
-        ],
+            ),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              size: 15,
+              color: famiSecondary(context),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class FinanceRow extends StatelessWidget {
-  const FinanceRow({
-    super.key,
+class _PaymentRow extends StatelessWidget {
+  const _PaymentRow({
     required this.title,
-    required this.subtitle,
-    required this.trailing,
+    required this.detail,
+    required this.amount,
   });
 
   final String title;
-  final String subtitle;
-  final String trailing;
+  final String detail;
+  final String amount;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 56,
-      leading: const Icon(Icons.autorenew_rounded),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: Text(
-        trailing,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
+      child: Row(
+        children: [
+          const Icon(CupertinoIcons.arrow_2_circlepath, size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  detail,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: famiSecondary(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            amount,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -902,68 +627,103 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenFrame(
+    return FamiPage(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 94),
       child: Column(
         children: [
           Row(
             children: [
-              const CircleAvatar(child: Text('F')),
-              const SizedBox(width: 10),
-              Expanded(
+              const FamiAvatar(initial: 'F', size: 42, online: true),
+              const SizedBox(width: 11),
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Family', style: Theme.of(context).textTheme.titleLarge),
-                    const Text('4 members'),
+                    Text(
+                      'Family',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    SizedBox(height: 1),
+                    Text(
+                      '4 members',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: FamiPalette.lightSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.call_outlined),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.videocam_outlined),
-              ),
+              _RoundAction(icon: CupertinoIcons.phone, onTap: () {}),
+              const SizedBox(width: 6),
+              _RoundAction(icon: CupertinoIcons.video_camera, onTap: () {}),
             ],
           ),
           const SizedBox(height: 16),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.only(bottom: 12),
+              reverse: false,
+              physics: const BouncingScrollPhysics(),
               children: const [
-                MessageBubble(
+                _DayDivider('Today'),
+                _ChatMessage(
                   sender: 'Mom',
-                  text: "Don't forget the dentist today at 4!",
+                  text: 'Don’t forget the dentist today at 4.',
                 ),
-                MessageBubble(
-                  sender: 'You',
-                  text: 'Got it 👍',
-                  mine: true,
-                ),
-                MessageBubble(
+                _ChatMessage(sender: 'You', text: 'Got it 👍', mine: true),
+                _ChatMessage(
                   sender: 'Dad',
-                  text: "Dinner at Grandma's tonight? 7:30?",
+                  text: 'Dinner at Grandma’s tonight? 7:30?',
                 ),
-                PollBubble(),
-                MessageBubble(
-                  sender: 'Mom',
-                  text: "I'll prepare something 🙂",
-                ),
+                _ChatPoll(),
+                _ChatMessage(sender: 'Mom', text: 'I’ll prepare something 🙂'),
               ],
             ),
           ),
-          ChatComposer(onPlus: () => showComposer(context)),
+          const SizedBox(height: 8),
+          _ChatInput(onPlus: () => showFamiComposer(context)),
         ],
       ),
     );
   }
 }
 
-class MessageBubble extends StatelessWidget {
-  const MessageBubble({
-    super.key,
+class _DayDivider extends StatelessWidget {
+  const _DayDivider(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: Row(
+        children: [
+          Expanded(child: Container(height: 0.5, color: famiSeparator(context))),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: famiSecondary(context),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(child: Container(height: 0.5, color: famiSeparator(context))),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatMessage extends StatelessWidget {
+  const _ChatMessage({
     required this.sender,
     required this.text,
     this.mine = false,
@@ -975,44 +735,50 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final bubble = mine
-        ? Theme.of(context).colorScheme.primary
-        : dark
-            ? const Color(0xFF262628)
-            : const Color(0xFFE9E9EC);
+    final dark = famiDark(context);
+    final bubbleColor = mine
+        ? FamiPalette.accent
+        : (dark ? const Color(0xFF242426) : const Color(0xFFE9E9ED));
 
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: 10),
         child: Column(
           crossAxisAlignment:
               mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                sender,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: dark
-                      ? const Color(0xFF98989D)
-                      : const Color(0xFF6E6E73),
+            if (!mine)
+              Padding(
+                padding: const EdgeInsets.only(left: 10, bottom: 3),
+                child: Text(
+                  sender,
+                  style: TextStyle(
+                    color: famiSecondary(context),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 3),
             Container(
-              constraints: const BoxConstraints(maxWidth: 280),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              constraints: const BoxConstraints(maxWidth: 286),
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
               decoration: BoxDecoration(
-                color: bubble,
-                borderRadius: BorderRadius.circular(19),
+                color: bubbleColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(mine ? 18 : 5),
+                  bottomRight: Radius.circular(mine ? 5 : 18),
+                ),
               ),
               child: Text(
                 text,
-                style: TextStyle(color: mine ? Colors.white : null),
+                style: TextStyle(
+                  color: mine ? Colors.white : null,
+                  fontSize: 15.5,
+                  height: 1.25,
+                ),
               ),
             ),
           ],
@@ -1022,8 +788,8 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-class PollBubble extends StatelessWidget {
-  const PollBubble({super.key});
+class _ChatPoll extends StatelessWidget {
+  const _ChatPoll();
 
   @override
   Widget build(BuildContext context) {
@@ -1031,23 +797,32 @@ class PollBubble extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Surface(
-          padding: const EdgeInsets.all(14),
-          child: SizedBox(
-            width: 260,
+        child: SizedBox(
+          width: 286,
+          child: FamiGroup(
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Should we take the car or taxi?',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const SizedBox(height: 10),
-                _PollOption(label: 'Car', value: 0.67),
+                const SizedBox(height: 12),
+                const _PollOption(label: 'Car', percent: 67),
                 const SizedBox(height: 7),
-                _PollOption(label: 'Taxi', value: 0.33),
+                const _PollOption(label: 'Taxi', percent: 33),
                 const SizedBox(height: 8),
-                const Text('3 votes', style: TextStyle(fontSize: 12)),
+                Text(
+                  '3 votes',
+                  style: TextStyle(
+                    color: famiSecondary(context),
+                    fontSize: 11.5,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1058,86 +833,100 @@ class PollBubble extends StatelessWidget {
 }
 
 class _PollOption extends StatelessWidget {
-  const _PollOption({required this.label, required this.value});
+  const _PollOption({required this.label, required this.percent});
 
   final String label;
-  final double value;
+  final int percent;
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
-    return Stack(
-      children: [
-        Container(
-          height: 36,
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        FractionallySizedBox(
-          widthFactor: value,
-          child: Container(
-            height: 36,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(10),
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: FamiPalette.accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Stack(
+        children: [
+          FractionallySizedBox(
+            widthFactor: percent / 100,
+            child: Container(
+              decoration: BoxDecoration(
+                color: FamiPalette.accent.withValues(alpha: 0.13),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
-        ),
-        SizedBox(
-          height: 36,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 11),
-              child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  percent.toString() + '%',
+                  style: TextStyle(
+                    color: famiSecondary(context),
+                    fontSize: 11.5,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class ChatComposer extends StatelessWidget {
-  const ChatComposer({super.key, required this.onPlus});
+class _ChatInput extends StatelessWidget {
+  const _ChatInput({required this.onPlus});
 
   final VoidCallback onPlus;
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      children: [
-        IconButton(
-          onPressed: onPlus,
-          icon: const Icon(Icons.add_circle_outline_rounded),
-        ),
-        Expanded(
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: dark ? const Color(0xFF1C1C1E) : Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: dark ? const Color(0xFF343437) : const Color(0xFFD8D8DC),
+    return FamiGlass(
+      radius: 24,
+      child: SizedBox(
+        height: 50,
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: onPlus,
+              icon: const Icon(
+                CupertinoIcons.add_circled,
+                color: FamiPalette.accent,
+                size: 23,
               ),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Message',
+            const Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Message',
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
               ),
             ),
-          ),
+            IconButton(
+              onPressed: () {},
+              icon: Icon(
+                CupertinoIcons.mic,
+                color: famiSecondary(context),
+                size: 21,
+              ),
+            ),
+          ],
         ),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.mic_none_rounded),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -1147,79 +936,110 @@ class FamilyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const members = [
-      FamilyMember('M', 'Mahdiar', 'You', 'Home'),
-      FamilyMember('M', 'Masoumeh', 'Mom', 'Home'),
-      FamilyMember('M', 'Mohammad', 'Dad', 'Work'),
-      FamilyMember('P', 'Pendar', 'Brother · dependent', 'With Mom'),
-    ];
-
-    return ScreenFrame(
+    return FamiPage(
       child: ListView(
+        physics: const BouncingScrollPhysics(),
         children: [
-          Text('Our Family', style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 4),
-          Text(
-            'Always connected',
-            style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF98989D)
-                  : const Color(0xFF6E6E73),
+          FamiHeader(
+            eyebrow: '4 people',
+            title: 'Our Family',
+            trailing: _RoundAction(
+              icon: CupertinoIcons.ellipsis,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const MoreScreen()),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          GridView.builder(
-            itemCount: members.length,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.92,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemBuilder: (context, index) =>
-                FamilyMemberCard(member: members[index]),
           ),
           const SizedBox(height: 24),
-          const SectionTitle('Shared Location'),
-          const SizedBox(height: 10),
-          Surface(
-            padding: const EdgeInsets.all(0),
+          FamiGroup(
+            child: Column(
+              children: const [
+                _MemberRow(
+                  initial: 'M',
+                  name: 'Mahdiar',
+                  relationship: 'You',
+                  status: 'Home',
+                  online: true,
+                ),
+                FamiDivider(indent: 74),
+                _MemberRow(
+                  initial: 'M',
+                  name: 'Masoumeh',
+                  relationship: 'Mom',
+                  status: 'Home',
+                  online: true,
+                ),
+                FamiDivider(indent: 74),
+                _MemberRow(
+                  initial: 'M',
+                  name: 'Mohammad',
+                  relationship: 'Dad',
+                  status: 'Work',
+                  online: true,
+                ),
+                FamiDivider(indent: 74),
+                _MemberRow(
+                  initial: 'P',
+                  name: 'Pendar',
+                  relationship: 'Brother · dependent',
+                  status: 'With Mom',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 26),
+          const FamiSectionHeader(title: 'Shared location'),
+          FamiGroup(
             child: Column(
               children: [
                 Container(
-                  height: 170,
+                  height: 152,
+                  margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF202124)
-                        : const Color(0xFFEDEEF0),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(22),
-                    ),
+                    color: famiDark(context)
+                        ? const Color(0xFF242426)
+                        : const Color(0xFFEDEEF1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.location_on_rounded,
-                      size: 42,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: CustomPaint(painter: _MapGridPainter(context)),
+                      ),
+                      const Positioned(
+                        left: 70,
+                        top: 55,
+                        child: _MapPerson(initial: 'M'),
+                      ),
+                      const Positioned(
+                        right: 62,
+                        bottom: 37,
+                        child: _MapPerson(initial: 'M'),
+                      ),
+                    ],
                   ),
                 ),
-                const ListTile(
-                  leading: CircleAvatar(child: Text('M')),
-                  title: Text('Mom'),
-                  subtitle: Text('Home · 2 min ago'),
-                  trailing: Icon(Icons.chevron_right_rounded),
+                const FamiDivider(indent: 14),
+                const FamiListRow(
+                  icon: CupertinoIcons.location_fill,
+                  title: 'Mom',
+                  subtitle: 'Home · 2 min ago',
                 ),
-                const Divider(height: 1, indent: 70),
-                const ListTile(
-                  leading: CircleAvatar(child: Text('M')),
-                  title: Text('Dad'),
-                  subtitle: Text('Work · 12 min ago'),
-                  trailing: Icon(Icons.chevron_right_rounded),
+                const FamiDivider(),
+                const FamiListRow(
+                  icon: CupertinoIcons.location_fill,
+                  title: 'Dad',
+                  subtitle: 'Work · 12 min ago',
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Everyone controls their own location sharing.',
+            style: TextStyle(
+              color: famiSecondary(context),
+              fontSize: 12,
             ),
           ),
         ],
@@ -1228,63 +1048,119 @@ class FamilyScreen extends StatelessWidget {
   }
 }
 
-class FamilyMember {
-  const FamilyMember(this.initial, this.name, this.relationship, this.status);
+class _MemberRow extends StatelessWidget {
+  const _MemberRow({
+    required this.initial,
+    required this.name,
+    required this.relationship,
+    required this.status,
+    this.online = false,
+  });
 
   final String initial;
   final String name;
   final String relationship;
   final String status;
-}
-
-class FamilyMemberCard extends StatelessWidget {
-  const FamilyMemberCard({super.key, required this.member});
-
-  final FamilyMember member;
+  final bool online;
 
   @override
   Widget build(BuildContext context) {
-    return Surface(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      child: Row(
         children: [
-          CircleAvatar(
-            radius: 30,
-            child: Text(
-              member.initial,
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+          FamiAvatar(initial: initial, size: 46, online: online),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  relationship,
+                  style: TextStyle(
+                    color: famiSecondary(context),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          Text(
-            member.name,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          FamiPill(
+            label: status,
+            color: status == 'Home'
+                ? FamiPalette.green
+                : FamiPalette.accent,
           ),
-          const SizedBox(height: 2),
-          Text(member.relationship),
-          const SizedBox(height: 9),
-          Row(
-            children: [
-              Icon(
-                Icons.circle,
-                size: 8,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  member.status,
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(width: 5),
+          Icon(
+            CupertinoIcons.chevron_forward,
+            color: famiSecondary(context),
+            size: 15,
           ),
         ],
       ),
     );
   }
+}
+
+class _MapPerson extends StatelessWidget {
+  const _MapPerson({required this.initial});
+
+  final String initial;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 33,
+      height: 33,
+      decoration: BoxDecoration(
+        color: famiSurface(context),
+        shape: BoxShape.circle,
+        border: Border.all(color: FamiPalette.accent, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+      ),
+    );
+  }
+}
+
+class _MapGridPainter extends CustomPainter {
+  _MapGridPainter(this.context);
+
+  final BuildContext context;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = famiSeparator(context)
+      ..strokeWidth = 1;
+    for (double x = 20; x < size.width; x += 48) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 20; y < size.height; y += 42) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MapGridPainter oldDelegate) => false;
 }
 
 class WalletScreen extends StatelessWidget {
@@ -1292,27 +1168,22 @@ class WalletScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenFrame(
+    return FamiPage(
       child: ListView(
+        physics: const BouncingScrollPhysics(),
         children: [
-          Text('Wallet', style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 4),
-          Text(
-            'Cards, subscriptions, domains and rates',
-            style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF98989D)
-                  : const Color(0xFF6E6E73),
-            ),
+          const FamiHeader(
+            eyebrow: 'Personal finance',
+            title: 'Wallet',
           ),
-          const SizedBox(height: 20),
-          const MiniBankCard(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 22),
+          const FamiBankCard(),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
-                child: SmallAction(
-                  icon: Icons.currency_exchange_rounded,
+                child: _WalletQuickAction(
+                  icon: CupertinoIcons.arrow_2_circlepath,
                   label: 'Convert',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -1321,55 +1192,53 @@ class WalletScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 9),
               Expanded(
-                child: SmallAction(
-                  icon: Icons.receipt_long_rounded,
-                  label: 'Transactions',
+                child: _WalletQuickAction(
+                  icon: CupertinoIcons.list_bullet,
+                  label: 'Activity',
                   onTap: () {},
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 9),
               Expanded(
-                child: SmallAction(
-                  icon: Icons.credit_card_rounded,
-                  label: 'Card details',
+                child: _WalletQuickAction(
+                  icon: CupertinoIcons.creditcard,
+                  label: 'Card',
                   onTap: () {},
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          const SectionTitle('Money'),
-          const SizedBox(height: 10),
-          Surface(
-            padding: EdgeInsets.zero,
+          const SizedBox(height: 26),
+          const FamiSectionHeader(title: 'Money'),
+          FamiGroup(
             child: Column(
               children: [
-                WalletNavRow(
-                  icon: Icons.autorenew_rounded,
+                FamiListRow(
+                  icon: CupertinoIcons.arrow_2_circlepath,
                   title: 'Subscriptions',
-                  subtitle: r'4 active · $28.47 / month',
+                  subtitle: '4 active · \$28.47 / month',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const SubscriptionsScreen(),
                     ),
                   ),
                 ),
-                const Divider(height: 1, indent: 56),
-                WalletNavRow(
-                  icon: Icons.language_rounded,
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.globe,
                   title: 'Domains',
-                  subtitle: r'3 to keep · $55.20 / year',
+                  subtitle: '3 to keep · \$55.20 / year',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const DomainsScreen(),
                     ),
                   ),
                 ),
-                const Divider(height: 1, indent: 56),
-                WalletNavRow(
-                  icon: Icons.show_chart_rounded,
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.chart_bar,
                   title: 'Currency rates',
                   subtitle: 'USD / toman · TGJU',
                   onTap: () => Navigator.of(context).push(
@@ -1378,77 +1247,36 @@ class WalletScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Divider(height: 1, indent: 56),
-                const WalletNavRow(
-                  icon: Icons.history_rounded,
+                const FamiDivider(),
+                const FamiListRow(
+                  icon: CupertinoIcons.clock,
                   title: 'Payment history',
                   subtitle: 'Manual records for now',
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          const SectionTitle('Subscriptions', action: 'Manage'),
-          const SizedBox(height: 10),
-          Surface(
-            padding: EdgeInsets.zero,
-            child: const Column(
-              children: [
-                FinanceRow(
-                  title: 'ChatGPT',
-                  subtitle: 'Oct 12 · Active',
-                  trailing: r'$20.00',
-                ),
-                Divider(height: 1, indent: 52),
-                FinanceRow(
-                  title: 'iCloud',
-                  subtitle: 'Oct 12 · Active',
-                  trailing: r'$0.99',
-                ),
-                Divider(height: 1, indent: 52),
-                FinanceRow(
-                  title: 'Spotify Premium',
-                  subtitle: 'Sep 29 · Active',
-                  trailing: r'$5.49',
-                ),
-                Divider(height: 1, indent: 52),
-                FinanceRow(
+          const SizedBox(height: 26),
+          const FamiSectionHeader(title: 'Next renewals'),
+          FamiGroup(
+            child: Column(
+              children: const [
+                _PaymentRow(
                   title: 'Google One',
-                  subtitle: 'Sep 23 · Active',
-                  trailing: r'$1.99',
+                  detail: 'Sep 23 · Active',
+                  amount: '\$1.99',
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          const SectionTitle('Domains', action: 'Manage'),
-          const SizedBox(height: 10),
-          Surface(
-            padding: EdgeInsets.zero,
-            child: const Column(
-              children: [
-                DomainRow(
-                  domain: 'safeworldstudios.com',
-                  date: 'Aug 19, 2027',
-                  keep: true,
+                FamiDivider(),
+                _PaymentRow(
+                  title: 'Spotify Premium',
+                  detail: 'Sep 29 · Active',
+                  amount: '\$5.49',
                 ),
-                Divider(height: 1, indent: 20),
-                DomainRow(
-                  domain: 'sevoria.co',
-                  date: 'Jun 25, 2027',
-                  keep: true,
-                ),
-                Divider(height: 1, indent: 20),
-                DomainRow(
-                  domain: 'staffrater.xyz',
-                  date: 'Sep 19, 2027',
-                  keep: true,
-                ),
-                Divider(height: 1, indent: 20),
-                DomainRow(
-                  domain: 'miryn.space',
-                  date: 'Oct 15, 2026',
-                  keep: false,
+                FamiDivider(),
+                _PaymentRow(
+                  title: 'ChatGPT',
+                  detail: 'Oct 12 · Active',
+                  amount: '\$20.00',
                 ),
               ],
             ),
@@ -1459,9 +1287,105 @@ class WalletScreen extends StatelessWidget {
   }
 }
 
-class SmallAction extends StatelessWidget {
-  const SmallAction({
-    super.key,
+class FamiBankCard extends StatelessWidget {
+  const FamiBankCard({super.key, this.compact = false});
+
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final height = compact ? 164.0 : 190.0;
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(19),
+      decoration: BoxDecoration(
+        color: famiDark(context)
+            ? const Color(0xFF111214)
+            : const Color(0xFF151719),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: famiDark(context) ? 0.25 : 0.18),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text(
+                'Bank Muscat',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Spacer(),
+              Text(
+                'VISA',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  fontStyle: FontStyle.italic,
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          const Text(
+            '1.865 OMR',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 31,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.8,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            r'≈ $4.85  ·  ≈ 1.12M toman',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.62),
+              fontSize: 13.5,
+            ),
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              Text(
+                '•••• 4275',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.68),
+                  fontSize: 12.5,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Manual',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.48),
+                  fontSize: 11.5,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletQuickAction extends StatelessWidget {
+  const _WalletQuickAction({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -1473,80 +1397,27 @@ class SmallAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Surface(
-      padding: EdgeInsets.zero,
-      radius: 18,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: SizedBox(
-          height: 78,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: FamiGroup(
+        radius: 17,
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        child: Column(
+          children: [
+            Icon(icon, size: 20, color: FamiPalette.accent),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-class WalletNavRow extends StatelessWidget {
-  const WalletNavRow({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 62,
-      onTap: onTap,
-      leading: Icon(icon),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right_rounded),
-    );
-  }
-}
-
-class DomainRow extends StatelessWidget {
-  const DomainRow({
-    super.key,
-    required this.domain,
-    required this.date,
-    required this.keep,
-  });
-
-  final String domain;
-  final String date;
-  final bool keep;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 60,
-      title: Text(domain, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(keep ? 'Keep · renews $date' : 'Let expire · $date'),
-      trailing: Icon(
-        keep ? Icons.check_circle_rounded : Icons.schedule_rounded,
-        color: keep ? Theme.of(context).colorScheme.primary : null,
       ),
     );
   }
@@ -1557,171 +1428,281 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF98989D)
-        : const Color(0xFF6E6E73);
-
     return Scaffold(
+      backgroundColor: famiBackground(context),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         title: const Text('More'),
-      ),
-      body: SafeArea(
-        top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
-          children: [
-            Surface(
-              child: Row(
-                children: [
-                  const CircleAvatar(radius: 30, child: Text('M')),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Mahdiar',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                        ),
-                        Text('@mahdiar', style: TextStyle(color: secondary)),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right_rounded),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            Surface(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  MoreRow(
-                    Icons.campaign_outlined,
-                    'Announcements',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const AnnouncementsScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.photo_library_outlined,
-                    'Memories',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const MemoriesScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.calendar_month_outlined,
-                    'Calendar',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const EventsScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.folder_outlined,
-                    'Files',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const FilesScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.checklist_rounded,
-                    'Lists',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ListsScreen(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            Surface(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  const MoreRow(Icons.settings_outlined, 'Settings'),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.notifications_none_rounded,
-                    'Notifications',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const NotificationsScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.lock_outline_rounded,
-                    'Privacy',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const PrivacyScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.contrast_rounded,
-                    'Appearance',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const AppearanceScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  MoreRow(
-                    Icons.system_update_alt_rounded,
-                    'App Update',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const UpdateCenterScreen(),
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  const MoreRow(Icons.help_outline_rounded, 'Help & Support'),
-                ],
-              ),
-            ),
-          ],
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(CupertinoIcons.back),
         ),
+      ),
+      body: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
+        children: [
+          FamiGroup(
+            padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
+            child: Row(
+              children: [
+                const FamiAvatar(initial: 'M', size: 54, online: true),
+                const SizedBox(width: 13),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mahdiar',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'View profile',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: FamiPalette.lightSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  CupertinoIcons.chevron_forward,
+                  size: 16,
+                  color: famiSecondary(context),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          FamiGroup(
+            child: Column(
+              children: [
+                FamiListRow(
+                  icon: CupertinoIcons.speaker_2,
+                  title: 'Announcements',
+                  onTap: () => _push(context, const AnnouncementsScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.photo_on_rectangle,
+                  title: 'Memories',
+                  onTap: () => _push(context, const MemoriesScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.calendar,
+                  title: 'Calendar',
+                  onTap: () => _push(context, const EventsScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.folder,
+                  title: 'Files',
+                  onTap: () => _push(context, const FilesScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.check_mark_circled,
+                  title: 'Lists',
+                  onTap: () => _push(context, const ListsScreen()),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          FamiGroup(
+            child: Column(
+              children: [
+                FamiListRow(
+                  icon: CupertinoIcons.bell,
+                  title: 'Notifications',
+                  onTap: () => _push(context, const NotificationsScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.lock,
+                  title: 'Privacy',
+                  onTap: () => _push(context, const PrivacyScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.circle_lefthalf_fill,
+                  title: 'Appearance',
+                  onTap: () => _push(context, const AppearanceScreen()),
+                ),
+                const FamiDivider(),
+                FamiListRow(
+                  icon: CupertinoIcons.arrow_down_circle,
+                  title: 'App Update',
+                  onTap: () => _push(context, const UpdateCenterScreen()),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _push(BuildContext context, Widget page) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => page),
+    );
+  }
+}
+
+class _RoundAction extends StatelessWidget {
+  const _RoundAction({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: famiSurface(context),
+          border: Border.all(color: famiSeparator(context)),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, size: 20),
       ),
     );
   }
 }
 
-class MoreRow extends StatelessWidget {
-  const MoreRow(this.icon, this.title, {super.key, this.onTap});
+Future<void> showFamiComposer(BuildContext context) async {
+  final rootContext = context;
+  await showModalBottomSheet<void>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) {
+      return Container(
+        decoration: BoxDecoration(
+          color: famiBackground(sheetContext),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 9, 14, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 5,
+              decoration: BoxDecoration(
+                color: famiSeparator(sheetContext),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Create New',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FamiGroup(
+              child: Column(
+                children: [
+                  _ComposerRow(
+                    icon: CupertinoIcons.photo,
+                    label: 'Photo or memory',
+                    onTap: () => _composerOpen(
+                      sheetContext,
+                      rootContext,
+                      const MemoriesScreen(),
+                    ),
+                  ),
+                  const FamiDivider(),
+                  _ComposerRow(
+                    icon: CupertinoIcons.mic,
+                    label: 'Voice message',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
+                        const SnackBar(
+                          content: Text('Voice recording comes in the media pass.'),
+                        ),
+                      );
+                    },
+                  ),
+                  const FamiDivider(),
+                  _ComposerRow(
+                    icon: CupertinoIcons.chart_bar,
+                    label: 'Poll',
+                    onTap: () => _composerOpen(
+                      sheetContext,
+                      rootContext,
+                      const CreateItemScreen(type: 'Poll'),
+                    ),
+                  ),
+                  const FamiDivider(),
+                  _ComposerRow(
+                    icon: CupertinoIcons.calendar,
+                    label: 'Event',
+                    onTap: () => _composerOpen(
+                      sheetContext,
+                      rootContext,
+                      const CreateItemScreen(type: 'Event'),
+                    ),
+                  ),
+                  const FamiDivider(),
+                  _ComposerRow(
+                    icon: CupertinoIcons.speaker_2,
+                    label: 'Announcement',
+                    onTap: () => _composerOpen(
+                      sheetContext,
+                      rootContext,
+                      const CreateItemScreen(type: 'Announcement'),
+                    ),
+                  ),
+                  const FamiDivider(),
+                  _ComposerRow(
+                    icon: CupertinoIcons.check_mark_circled,
+                    label: 'Task',
+                    onTap: () => _composerOpen(
+                      sheetContext,
+                      rootContext,
+                      const CreateItemScreen(type: 'Task'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
-  final IconData icon;
-  final String title;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 58,
-      onTap: onTap,
-      leading: Icon(icon),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      trailing: const Icon(Icons.chevron_right_rounded),
-    );
-  }
+Future<void> _composerOpen(
+  BuildContext sheetContext,
+  BuildContext rootContext,
+  Widget page,
+) async {
+  HapticFeedback.lightImpact();
+  Navigator.pop(sheetContext);
+  await Future<void>.delayed(const Duration(milliseconds: 60));
+  if (!rootContext.mounted) return;
+  await Navigator.of(rootContext).push(
+    MaterialPageRoute<void>(builder: (_) => page),
+  );
 }
