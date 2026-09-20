@@ -847,7 +847,7 @@ class MiniBankCard extends StatelessWidget {
           ),
           SizedBox(height: 6),
           Text(
-            '≈ $4.85  ·  ≈ 1.12M toman',
+            r'≈ $4.85  ·  ≈ 1.12M toman',
             style: TextStyle(color: Colors.white70, fontSize: 15),
           ),
           SizedBox(height: 12),
