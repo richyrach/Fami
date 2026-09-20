@@ -28,6 +28,9 @@ jobs:
       - name: Generate Android host project
         run: flutter create --platforms=android --project-name fami --org com.fami.family .
 
+      - name: Configure Android OTA updates
+        run: python3 tool/patch_android_ota.py
+
       - name: Get packages
         run: flutter pub get
 
@@ -35,7 +38,7 @@ jobs:
         run: flutter analyze lib
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=FAMI_UPDATE_MANIFEST_URL="${{ vars.FAMI_UPDATE_MANIFEST_URL }}"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
