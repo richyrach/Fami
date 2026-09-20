@@ -1,7 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';\n\nimport 'wallet_tools.dart';
+import 'package:flutter/services.dart';
+
+import 'more_tools.dart';
+import 'theme_controller.dart';
+import 'wallet_tools.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
