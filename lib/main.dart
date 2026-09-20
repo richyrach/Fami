@@ -1583,6 +1583,60 @@ class _RoundAction extends StatelessWidget {
   }
 }
 
+class _ComposerRow extends StatelessWidget {
+  const _ComposerRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        child: Row(
+          children: [
+            Container(
+              width: 31,
+              height: 31,
+              decoration: BoxDecoration(
+                color: famiDark(context)
+                    ? const Color(0xFF2C2C2E)
+                    : const Color(0xFFF0F0F2),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              size: 15,
+              color: famiSecondary(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 Future<void> showFamiComposer(BuildContext context) async {
   final rootContext = context;
   await showModalBottomSheet<void>(
