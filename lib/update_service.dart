@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:ota_update/ota_update.dart';
 
-const int famiCurrentBuild = 1;
-const String famiCurrentVersion = '0.1.0';
+const int famiCurrentBuild = 2;
+const String famiCurrentVersion = '0.2.0';
 
 const String famiUpdateManifestUrl = String.fromEnvironment(
   'FAMI_UPDATE_MANIFEST_URL',
