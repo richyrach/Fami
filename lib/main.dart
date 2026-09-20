@@ -75,13 +75,18 @@ class FamiApp extends StatelessWidget {
       );
     }
 
-    return MaterialApp(
-      title: 'Fami',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(lightScheme),
-      darkTheme: buildTheme(darkScheme),
-      themeMode: ThemeMode.system,
-      home: const FamiShell(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: famiThemeMode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Fami',
+          debugShowCheckedModeBanner: false,
+          theme: buildTheme(lightScheme),
+          darkTheme: buildTheme(darkScheme),
+          themeMode: mode,
+          home: const FamiShell(),
+        );
+      },
     );
   }
 }
@@ -1521,17 +1526,41 @@ class MoreScreen extends StatelessWidget {
             const SizedBox(height: 18),
             Surface(
               padding: EdgeInsets.zero,
-              child: const Column(
+              child: Column(
                 children: [
-                  MoreRow(Icons.settings_outlined, 'Settings'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.notifications_none_rounded, 'Notifications'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.lock_outline_rounded, 'Privacy'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.contrast_rounded, 'Appearance'),
-                  Divider(height: 1, indent: 56),
-                  MoreRow(Icons.help_outline_rounded, 'Help & Support'),
+                  const MoreRow(Icons.settings_outlined, 'Settings'),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.notifications_none_rounded,
+                    'Notifications',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NotificationsScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.lock_outline_rounded,
+                    'Privacy',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const PrivacyScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  MoreRow(
+                    Icons.contrast_rounded,
+                    'Appearance',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AppearanceScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  const MoreRow(Icons.help_outline_rounded, 'Help & Support'),
                 ],
               ),
             ),
@@ -1543,15 +1572,17 @@ class MoreScreen extends StatelessWidget {
 }
 
 class MoreRow extends StatelessWidget {
-  const MoreRow(this.icon, this.title, {super.key});
+  const MoreRow(this.icon, this.title, {super.key, this.onTap});
 
   final IconData icon;
   final String title;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       minTileHeight: 58,
+      onTap: onTap,
       leading: Icon(icon),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       trailing: const Icon(Icons.chevron_right_rounded),
